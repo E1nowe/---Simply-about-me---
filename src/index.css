@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: #000000; /* Global black background */
+  color: #ffffff; /* Global white text */
+}
+
+/* Style for the scrollbar if needed */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
