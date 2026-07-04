@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -6,6 +6,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 export default function App() {
+  const [typedText, setTypedText] = useState("");
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+
+  const fullName = "EWON WILLIAM";
+
   // 1. Lenis Smooth Scrolling setup
   useEffect(() => {
     const lenis = new Lenis({
@@ -28,114 +34,58 @@ export default function App() {
     };
   }, []);
 
-  // 2. Refs
-  const containerRef = useRef(null);
-  const textWrapperRef = useRef(null);
-  const maskWrapperRef = useRef(null);
-  const marbleRef = useRef(null);
-
-  // 3. GSAP Scroll Animation
+  // 2. GSAP True Character-Extraction Typewriter & Auto-Shift
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const marble = marbleRef.current;
-      const textWrapper = textWrapperRef.current;
-      const maskWrapper = maskWrapperRef.current;
+      if (!containerRef.current) return;
 
-      if (!marble || !textWrapper || !maskWrapper) return;
+      // An object to hold our proxy scroll position
+      const textProgress = { charCount: 0 };
 
-      // Master Timeline pinned to the scroll position
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=2500", // Takes 8-10 slow scrolls to complete the movement
+          end: "+=3500", 
           pin: true,
-          scrub: 2,      // Strict tracking to the user scroll wheel
+          scrub: 1, // Snaps hard to your physical wheel rotations
           invalidateOnRefresh: true,
         },
       });
 
-      // Initial state configuration
-      gsap.set(marble, {
-        opacity: 0,
-        xPercent: -50,
-        yPercent: -50,
-        x: "50vw",
-        y: "100vh",
-      });
-
-      gsap.set(maskWrapper, { clipPath: "inset(0 100% 0 0)" });
-      gsap.set(textWrapper, { x: "20vw" }); // Text starts shifted right for Apple movement
-
-      // Dynamic calculation helper for perfect alignment boundaries
-      const getPositions = () => {
-        const textRect = textWrapper.getBoundingClientRect();
-        const marbleRect = marble.getBoundingClientRect();
-
-        return {
-          // X-position to sit perfectly left of 'E' at its initial right-shifted position
-          startX: textRect.left + marbleRect.width / 2,
-        };
-      };
-
-      // --- THE 3 SCROLL PHASES ---
-
-      // PHASE 1: 0% - 40% -> Marble drops down, spins, and fades in completely
-      tl.to(marble, {
-        opacity: 1,
-        y: "115vh",
-        rotation: 720,
-        ease: "none",
-        duration: 0.4,
+      // Pure step-driven typing that updates React state explicitly
+      tl.to(textProgress, {
+        charCount: fullName.length,
+        ease: `steps(${fullName.length})`,
+        duration: 0.8,
+        onUpdate: () => {
+          const index = Math.floor(textProgress.charCount);
+          setTypedText(fullName.substring(0, index));
+        }
       })
-
-      // PHASE 2: 40% - 60% -> Marble moves up to center screen, framing perfectly next to 'E'
-      .to(marble, {
-        y: "50vh",
-        x: () => getPositions().startX,
-        rotation: 1080,
+      // Phase 2: If the text gets overly long, smoothly guide it slightly left 
+      // so it balances beautifully on smaller desktop monitors
+      .to(textRef.current, {
+        x: () => {
+          // Dynamic safety fallback: if text width exceeds screen size, shift it left
+          if (textRef.current && textRef.current.offsetWidth > window.innerWidth * 0.8) {
+            return "-18vw";
+          }
+          return "0vw";
+        },
         ease: "none",
         duration: 0.2,
-      })
-
-      // PHASE 3: 60% - 100% -> The text slides elegantly from Right to Left, 
-      // while the mask expands and the marble tracks over the moving letters.
-      .to(maskWrapper, {
-        clipPath: "inset(0 0% 0 0)",
-        ease: "none",
-        duration: 0.4,
-      }, "revealAndSlide")
-      .to(textWrapper, {
-        x: "-15vw", // Smooth elegant slide leftwards
-        ease: "none",
-        duration: 0.4,
-      }, "revealAndSlide")
-      .to(marble, {
-        x: "75vw",  // Marble travels across the screen tracking the reveal
-        rotation: 1800,
-        ease: "none",
-        duration: 0.4,
-      }, "revealAndSlide");
+      }, "-=0.2"); // Overlap slightly with the end of typing
 
     }, containerRef);
 
-    return () => {
-      ctx.revert();
-      ScrollTrigger.refresh();
-    };
-  }, []);
-
-  // Handle window resize
-  useLayoutEffect(() => {
-    const handleResize = () => ScrollTrigger.refresh();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => ctx.revert();
   }, []);
 
   return (
     <div className="min-h-screen bg-white relative text-black antialiased">
       
-      {/* SECTION 1: HERO (About Me) */}
+      {/* SECTION 1: HERO */}
       <section className="h-screen flex flex-col justify-center items-center bg-gray-50 text-black relative">
         <h1 className="text-7xl md:text-9xl font-bold tracking-tight text-center">
           About me
@@ -149,41 +99,29 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECTION 2: THE REVEAL & MARBLE PARALLAX SECTION */}
+      {/* SECTION 2: GIANT TYPEWRITER SLIDE */}
       <section
         ref={containerRef}
         className="relative w-full h-screen flex items-center justify-center bg-white overflow-hidden select-none"
       >
-        <div className="w-full flex items-center justify-start overflow-visible">
+        <div className="flex items-center justify-center w-full overflow-visible px-6">
           
-          {/* Mask Wrapper controlling clip-path reveal */}
-          <div
-            ref={maskWrapperRef}
-            className="w-full flex items-center will-change-[clip-path]"
-            style={{ clipPath: "inset(0 100% 0 0)" }}
+          <h1
+            ref={textRef}
+            className="font-black tracking-tighter leading-[0.85] text-black uppercase will-change-transform inline-flex items-center justify-center whitespace-nowrap min-h-[40vh]"
+            style={{ fontSize: "min(24vw, 75vh)" }} // Optimized sizing for perfect centering without cutting
           >
-            {/* The Text Node moving right to left */}
-            <h1
-              ref={textWrapperRef}
-              className="font-black tracking-tighter leading-[0.85] uppercase text-black whitespace-nowrap will-change-transform"
-              style={{ fontSize: "min(35vw, 85vh)" }}
-            >
-              Ewon William
-            </h1>
-          </div>
+            {/* Render only the typed string segment */}
+            {typedText}
+            
+            {/* Apple Terminal Cursor */}
+            <span className="inline-block ml-2 w-[0.03em] h-[0.75em] bg-black animate-pulse self-center"></span>
+          </h1>
           
         </div>
-
-        {/* The 3D Floating Marble Element */}
-        <img
-          ref={marbleRef}
-          src="/assets/marble.png"
-          alt="3D Floating Marble"
-          className="fixed top-0 left-0 w-[12vh] h-[12vh] object-contain pointer-events-none drop-shadow-[0_25px_35px_rgba(0,0,0,0.4)] will-change-transform z-50"
-        />
       </section>
 
-      {/* SECTION 3: NEXT PAGE PLACEHOLDER */}
+      {/* SECTION 3: NEXT PAGE */}
       <section className="w-full h-screen bg-gray-100 text-black flex items-center justify-center">
         <h2 className="text-3xl font-light tracking-widest uppercase">Portfolio Content</h2>
       </section>
