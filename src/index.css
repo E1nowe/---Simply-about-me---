@@ -21,3 +21,11 @@ body {
   width: 0px;
   background: transparent;
 }
+/* Add this to the bottom of your src/index.css */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-pulse {
+  animation: cursor-blink 1s step-end infinite;
+}
