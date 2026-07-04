@@ -12,7 +12,6 @@ export default function App() {
 
   const fullName = "Ewon William";
 
-  // 1. Lenis Smooth Scrolling setup
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -34,53 +33,48 @@ export default function App() {
     };
   }, []);
 
-  // 2. GSAP Dynamic Typewriter & Sliding Track Matrix
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       if (!containerRef.current || !textRef.current) return;
 
       const textProgress = { charCount: 0 };
 
-      // Initialize the text starting slightly offset right to comfortably frame "Ewon"
-      gsap.set(textRef.current, { x: "20vw" });
-
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=5000", // Increased scroll track runway to guarantee space for the letters to unpack
+          end: "+=3500",
           pin: true,
-          scrub: 1.5,    // Crisp, immediate tracking to the scroll wheel
+          scrub: 2,
           invalidateOnRefresh: true,
         },
       });
 
-      // Synchronize the typing count with a leftward layout pull
       tl.to(textProgress, {
-        charCount: fullName.length,
-        ease: `steps(${fullName.length})`,
+        charCount: 12.5,
+        ease: `steps(13)`,
         duration: 1,
         onUpdate: () => {
-          const index = Math.floor(textProgress.charCount);
-          setTypedText(fullName.substring(0, index + 1));
+          let index = Math.min(12, Math.round(textProgress.charCount));
+          setTypedText(fullName.substring(0, index));
         }
-      }, "sync")
-      .to(textRef.current, {
-        x: "-25vw", // Smoothly pulls the text leftward, bringing "am" safely onto the screen
-        ease: "none",
-        duration: 1,
-      }, "sync");
-
+      });
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
+  useLayoutEffect(() => {
+    const handleResize = () => ScrollTrigger.refresh();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white relative text-black antialiased">
+    <div className="min-h-screen bg-white relative text-black antialiased overflow-x-hidden">
       
       {/* SECTION 1: HERO */}
-      <section className="h-screen flex flex-col justify-center items-center bg-gray-50 text-black relative">
+      <section className="h-screen flex flex-col justify-center items-center bg-gray-50 text-black relative overflow-hidden">
         <h1 className="text-7xl md:text-9xl font-bold tracking-tight text-center">
           About me
         </h1>
@@ -93,25 +87,26 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECTION 2: MASSIVE TYPEWRITER - SLIDING SYSTEM */}
+      {/* SECTION 2: PERFECTLY CENTERED TYPEWRITER */}
       <section
         ref={containerRef}
-        className="relative w-full h-screen flex items-center justify-start bg-white overflow-hidden select-none"
+        className="relative w-full h-screen flex items-center justify-center bg-white overflow-hidden select-none"
       >
-        {/* Changed justify-center to justify-start to enable clean right-to-left overflow scrolling */}
-        <div className="flex items-center justify-start w-full h-full pl-[10vw] overflow-visible">
-          
+        {/* 
+           Using justify-center explicitly.
+           This guarantees the text grows strictly from the center of the screen.
+           The 'm' will land perfectly on the right side of the screen, never cut off.
+        */}
+        <div className="flex items-center justify-center w-full h-full px-4">
           <h1
             ref={textRef}
-            className="font-black tracking-tighter leading-[0.85] text-black uppercase will-change-transform inline-flex items-center whitespace-nowrap"
-            style={{ fontSize: "min(35vw, 85vh)" }} 
+            className="font-black tracking-tighter leading-[0.9] text-black inline-block text-center whitespace-nowrap will-change-transform"
+            // Reduced to 40vh. Big, cinematic, but guarantees 100% of the name fits.
+            style={{ fontSize: "min(20vw, 40vh)" }} 
           >
-            <span>{typedText}</span>
-            
-            {/* Apple Terminal Cursor */}
-            <div className="inline-block ml-3 w-[0.03em] h-[0.75em] bg-black animate-pulse self-center"></div>
+            {typedText}
+            <div className="inline-block ml-2 min-w-[4px] h-[0.75em] bg-black animate-pulse align-middle"></div>
           </h1>
-          
         </div>
       </section>
 
