@@ -10,7 +10,7 @@ export default function App() {
   const containerRef = useRef(null);
   const textRef = useRef(null);
 
-  const fullName = "EWON WILLIAM";
+  const fullName = "Ewon William";
 
   // 1. Lenis Smooth Scrolling setup
   useEffect(() => {
@@ -34,48 +34,42 @@ export default function App() {
     };
   }, []);
 
-  // 2. GSAP True Character-Extraction Typewriter & Auto-Shift
+  // 2. GSAP Dynamic Typewriter & Sliding Track Matrix
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !textRef.current) return;
 
-      // An object to hold our proxy scroll position
       const textProgress = { charCount: 0 };
+
+      // Initialize the text starting slightly offset right to comfortably frame "Ewon"
+      gsap.set(textRef.current, { x: "20vw" });
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=3500", 
+          end: "+=5000", // Increased scroll track runway to guarantee space for the letters to unpack
           pin: true,
-          scrub: 1, // Snaps hard to your physical wheel rotations
+          scrub: 1.5,    // Crisp, immediate tracking to the scroll wheel
           invalidateOnRefresh: true,
         },
       });
 
-      // Pure step-driven typing that updates React state explicitly
+      // Synchronize the typing count with a leftward layout pull
       tl.to(textProgress, {
         charCount: fullName.length,
         ease: `steps(${fullName.length})`,
-        duration: 0.8,
+        duration: 1,
         onUpdate: () => {
           const index = Math.floor(textProgress.charCount);
-          setTypedText(fullName.substring(0, index));
+          setTypedText(fullName.substring(0, index + 1));
         }
-      })
-      // Phase 2: If the text gets overly long, smoothly guide it slightly left 
-      // so it balances beautifully on smaller desktop monitors
+      }, "sync")
       .to(textRef.current, {
-        x: () => {
-          // Dynamic safety fallback: if text width exceeds screen size, shift it left
-          if (textRef.current && textRef.current.offsetWidth > window.innerWidth * 0.8) {
-            return "-18vw";
-          }
-          return "0vw";
-        },
+        x: "-25vw", // Smoothly pulls the text leftward, bringing "am" safely onto the screen
         ease: "none",
-        duration: 0.2,
-      }, "-=0.2"); // Overlap slightly with the end of typing
+        duration: 1,
+      }, "sync");
 
     }, containerRef);
 
@@ -99,23 +93,23 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECTION 2: GIANT TYPEWRITER SLIDE */}
+      {/* SECTION 2: MASSIVE TYPEWRITER - SLIDING SYSTEM */}
       <section
         ref={containerRef}
-        className="relative w-full h-screen flex items-center justify-center bg-white overflow-hidden select-none"
+        className="relative w-full h-screen flex items-center justify-start bg-white overflow-hidden select-none"
       >
-        <div className="flex items-center justify-center w-full overflow-visible px-6">
+        {/* Changed justify-center to justify-start to enable clean right-to-left overflow scrolling */}
+        <div className="flex items-center justify-start w-full h-full pl-[10vw] overflow-visible">
           
           <h1
             ref={textRef}
-            className="font-black tracking-tighter leading-[0.85] text-black uppercase will-change-transform inline-flex items-center justify-center whitespace-nowrap min-h-[40vh]"
-            style={{ fontSize: "min(24vw, 75vh)" }} // Optimized sizing for perfect centering without cutting
+            className="font-black tracking-tighter leading-[0.85] text-black uppercase will-change-transform inline-flex items-center whitespace-nowrap"
+            style={{ fontSize: "min(35vw, 85vh)" }} 
           >
-            {/* Render only the typed string segment */}
-            {typedText}
+            <span>{typedText}</span>
             
             {/* Apple Terminal Cursor */}
-            <span className="inline-block ml-2 w-[0.03em] h-[0.75em] bg-black animate-pulse self-center"></span>
+            <div className="inline-block ml-3 w-[0.03em] h-[0.75em] bg-black animate-pulse self-center"></div>
           </h1>
           
         </div>
