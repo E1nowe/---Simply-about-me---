@@ -9,6 +9,7 @@ export default function App() {
   // --- STATES & DATA ---
   const [activeTab, setActiveTab] = useState('university');
   const [activeWorkIndex, setActiveWorkIndex] = useState(0);
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0); // New state for Slider
 
   // --- REFS ---
   const nameTextRef = useRef(null);
@@ -54,6 +55,37 @@ export default function App() {
         "Gained exposure to corporate R&D workflows and emerging tech trends.",
         "Applied the Critical Path Method to optimize project timelines."
       ]
+    }
+  ];
+
+  // Projects Data (From your CV)
+  const projectsData = [
+    {
+      title: "AI Predictive Maintenance Platform",
+      company: "FalconTag (Pharmaceutical Logistics)",
+      description: "Developed an AI-powered platform to protect high-value pharmaceutical transport. Achieved 92% accuracy in fault detection using Python, TensorFlow, and IoT sensor data, reducing shipment delays by 28%."
+    },
+    {
+      title: "SwiftBot Project",
+      company: "Raspberry Pi Robotics",
+      description: "Programmed a Raspberry Pi robot using Java (Eclipse IDE) with Agile methodologies. Designed system flowcharts and created visual prototypes in Canva, focusing on unit testing and white-box testing."
+    },
+    {
+      title: "Oil and Gas Production Forecasting",
+      company: "Statistical & ML Analysis",
+      description: "Performed statistical analysis on rig data using SPSS and built machine learning models in Python (Scikit-learn) to forecast future oil production, translating complex data into actionable business insights."
+    }
+  ];
+
+  // Hobbies Data (From your CV)
+  const hobbiesData = [
+    {
+      title: "Technology & Gaming",
+      description: "Passionate about exploring emerging frameworks and computational algorithms. Analyzes gameplay loops and AI patterns with a developer's perspective."
+    },
+    {
+      title: "Sports",
+      description: "Competitive local league cricketer, helping juniors develop teamwork. An active tournament chess player and college club member, sharpening analytical thinking."
     }
   ];
 
@@ -128,7 +160,7 @@ export default function App() {
     };
   }, []);
 
-  // --- 2. GSAP TYPEWRITER (DIRECT DOM ANIMATION) ---
+  // --- 2. GSAP TYPEWRITER ---
   useLayoutEffect(() => {
     if (!nameSectionRef.current || !nameTextRef.current) return;
 
@@ -157,26 +189,35 @@ export default function App() {
     return () => ctx.revert();
   }, []);
 
-  // --- 3. GSAP PINNING & SLIDES FOR WORK EXPERIENCE ---
+  // --- 3. GSAP PINNING & CROSS-FADE TIMELINE FOR WORK ---
   useLayoutEffect(() => {
     if (!workSectionRef.current || !workCardsContainerRef.current) return;
 
     const ctx = gsap.context(() => {
-      const cards = workCardsContainerRef.current.children;
+      const cards = Array.from(workCardsContainerRef.current.children);
       
+      cards.forEach((card, i) => {
+        gsap.set(card, {
+          opacity: i === 0 ? 1 : 0,
+          y: i === 0 ? 0 : 50,
+          scale: i === 0 ? 1 : 0.97,
+          pointerEvents: i === 0 ? 'auto' : 'none',
+          visibility: i === 0 ? 'visible' : 'hidden'
+        });
+      });
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: workSectionRef.current,
           start: "top top",
-          end: `+=${workData.length * 100}%`,
+          end: "+=3500",
           pin: true,
           scrub: 1,
           onUpdate: (self) => {
             const progress = self.progress;
-            const index = Math.min(
-              workData.length - 1,
-              Math.floor(progress * workData.length)
-            );
+            let index = 0;
+            if (progress > 0.33 && progress <= 0.66) index = 1;
+            if (progress > 0.66) index = 2;
             
             setActiveWorkIndex(index);
 
@@ -190,15 +231,20 @@ export default function App() {
         }
       });
 
-      for (let i = 1; i < cards.length; i++) {
-        tl.to(cards[i], {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1,
-          ease: "power1.inOut"
-        }, i - 0.5);
+      tl.to({}, { duration: 2 });
+
+      if (cards[1]) {
+        tl.to(cards[0], { opacity: 0, y: -50, scale: 0.97, visibility: 'hidden', pointerEvents: 'none', duration: 1, ease: "power2.inOut" }, "transition1")
+          .to(cards[1], { opacity: 1, y: 0, scale: 1, visibility: 'visible', pointerEvents: 'auto', duration: 1, ease: "power2.inOut" }, "transition1")
+          .to({}, { duration: 2 });
       }
+
+      if (cards[2]) {
+        tl.to(cards[1], { opacity: 0, y: -50, scale: 0.97, visibility: 'hidden', pointerEvents: 'none', duration: 1, ease: "power2.inOut" }, "transition2")
+          .to(cards[2], { opacity: 1, y: 0, scale: 1, visibility: 'visible', pointerEvents: 'auto', duration: 1, ease: "power2.inOut" }, "transition2")
+          .to({}, { duration: 2 });
+      }
+
     }, workSectionRef);
 
     return () => ctx.revert();
@@ -210,8 +256,8 @@ export default function App() {
       const content = document.getElementById('edu-content');
       if (content) {
         gsap.fromTo(content, 
-          { opacity: 0, y: 10 }, 
-          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+          { opacity: 0, y: 15, scale: 0.98 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" }
         );
       }
     });
@@ -225,6 +271,23 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // --- 5. HANDLERS FOR PROJECT SLIDER ---
+  const nextProject = () => {
+    if (activeProjectIndex < projectsData.length - 1) {
+      setActiveProjectIndex(activeProjectIndex + 1);
+    } else {
+      setActiveProjectIndex(0); // Loop back to start
+    }
+  };
+
+  const prevProject = () => {
+    if (activeProjectIndex > 0) {
+      setActiveProjectIndex(activeProjectIndex - 1);
+    } else {
+      setActiveProjectIndex(projectsData.length - 1); // Loop to end
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white relative text-black antialiased overflow-x-hidden">
@@ -274,71 +337,91 @@ export default function App() {
 
       {/* SECTION 4: APPLE EDUCATION */}
       <section className="w-full min-h-screen bg-black text-white flex flex-col items-center justify-center py-20 px-6 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-950/20 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none"></div>
+        <div className="absolute bottom-1/4 left-1/3 -translate-x-1/2 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+
         <div className="w-full max-w-6xl relative z-10">
-          <h2 className="text-5xl md:text-7xl font-light tracking-tight text-center mb-16 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">Education</h2>
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="flex flex-row md:flex-col justify-center md:justify-start gap-4 md:gap-2 w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
+          <h2 className="text-5xl md:text-7xl font-light tracking-tight text-center mb-16 bg-clip-text text-transparent bg-gradient-to-b from-white via-gray-200 to-gray-500">
+            Education
+          </h2>
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="flex flex-row md:flex-col justify-center md:justify-start gap-3 w-full md:w-1/3 border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-8">
               {['university', 'college', 'school'].map((key) => (
-                <button key={key} onClick={() => setActiveTab(key)} className={`text-left px-4 py-3 rounded-2xl transition-all duration-300 ${activeTab === key ? 'bg-white/10 backdrop-blur-md text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                  <div className="font-semibold text-lg">{key === 'university' ? 'University' : key === 'college' ? 'College' : 'Secondary School'}</div>
-                  <div className="text-xs opacity-60 mt-1">{key === 'university' ? 'Sep 2024 - Jun 2028' : key === 'college' ? 'Sept 2022 - July 2024' : 'Sept 2018 - July 2022'}</div>
+                <button 
+                  key={key} 
+                  onClick={() => setActiveTab(key)} 
+                  className={`text-left px-5 py-4 rounded-2xl transition-all duration-300 border ${
+                    activeTab === key 
+                      ? 'bg-neutral-900/80 backdrop-blur-xl border-white/25 text-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)] scale-[1.02]' 
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5 hover:border-white/5'
+                  }`}
+                >
+                  <div className="font-semibold text-lg tracking-tight">
+                    {key === 'university' ? 'University' : key === 'college' ? 'College' : 'Secondary School'}
+                  </div>
+                  <div className="text-xs font-mono opacity-60 mt-1">
+                    {key === 'university' ? 'Sep 2024 - Jun 2028' : key === 'college' ? 'Sept 2022 - July 2024' : 'Sept 2018 - July 2022'}
+                  </div>
                 </button>
               ))}
             </div>
             <div id="edu-content" className="w-full md:w-2/3">
-              <div className="bg-neutral-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] min-h-[300px] shadow-black/80">
-                <div className="flex items-start justify-between mb-4">
-                  <div><h3 className="text-3xl md:text-4xl font-medium text-white tracking-tight">{educationData[activeTab].title}</h3><p className="text-blue-400/90 text-lg mt-1">{educationData[activeTab].school}</p></div>
-                  <span className="text-sm font-mono text-gray-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full whitespace-nowrap">{educationData[activeTab].date}</span>
+              <div className="bg-neutral-900/60 hover:bg-neutral-900/70 transition-colors duration-500 backdrop-blur-3xl border border-white/15 rounded-3xl p-8 md:p-12 shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.2)] min-h-[320px] relative overflow-hidden group">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700 pointer-events-none"></div>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 relative z-10">
+                  <div>
+                    <h3 className="text-3xl md:text-4xl font-medium text-white tracking-tight leading-tight">
+                      {educationData[activeTab].title}
+                    </h3>
+                    <p className="text-blue-400 text-lg mt-1 font-normal">
+                      {educationData[activeTab].school}
+                    </p>
+                  </div>
+                  <span className="self-start sm:self-auto text-xs font-mono text-gray-300 bg-white/10 border border-white/10 px-3.5 py-1.5 rounded-full whitespace-nowrap shadow-inner">
+                    {educationData[activeTab].date}
+                  </span>
                 </div>
-                <div className="h-px w-full bg-white/10 my-6"></div>
-                <div className="text-gray-300 text-lg leading-relaxed">{educationData[activeTab].details}</div>
+                <div className="h-px w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent my-6"></div>
+                <div className="text-gray-300 text-lg leading-relaxed relative z-10 font-light">
+                  {educationData[activeTab].details}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 5: WORK EXPERIENCE - FIXED HIGH-PERFORMANCE TIMELINE */}
+      {/* SECTION 5: WORK EXPERIENCE */}
       <section ref={workSectionRef} className="relative w-full h-screen bg-black text-white flex items-center justify-center overflow-hidden">
-        {/* Deep Ambient Background Glow to Make Glassmorphism Pop */}
-        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[130px] pointer-events-none will-change-transform"></div>
-        <div className="absolute top-1/3 left-2/3 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none will-change-transform"></div>
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[140px] pointer-events-none will-change-transform"></div>
+        <div className="absolute top-1/3 left-2/3 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none will-change-transform"></div>
 
         <div className="w-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col md:flex-row gap-12 h-full items-center justify-center relative">
           
-          {/* Left Container */}
-          <div ref={workCardsContainerRef} className="w-full md:w-3/4 relative h-[60vh] flex items-center justify-center">
+          <div ref={workCardsContainerRef} className="w-full md:w-3/4 relative h-[70vh] md:h-[60vh] max-h-[650px] min-h-[480px] flex items-center justify-center">
             {workData.map((job, index) => (
               <div
                 key={index}
-                className={`absolute inset-0 p-8 md:p-12 rounded-3xl bg-neutral-900/40 backdrop-blur-2xl border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.8)] flex flex-col justify-center transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) will-change-[transform,opacity] ${
-                  activeWorkIndex === index 
-                    ? 'opacity-100 scale-100 border-white/20 pointer-events-auto z-20 translate-y-0 shadow-blue-500/5' 
-                    : index < activeWorkIndex 
-                      ? 'opacity-0 scale-[0.97] pointer-events-none -translate-y-8 z-10' 
-                      : 'opacity-0 scale-[0.97] pointer-events-none translate-y-8 z-10'
-                }`}
+                className="absolute inset-0 p-6 md:p-12 rounded-3xl bg-neutral-900/70 backdrop-blur-3xl border border-white/15 shadow-[0_10px_50px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.2)] flex flex-col justify-start md:justify-center overflow-y-auto style-scrollbar will-change-[transform,opacity]"
               >
-                <div className="mb-6">
-                  <span className="text-xs uppercase font-mono tracking-widest text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-md border border-blue-500/20 inline-block mb-3">
-                    Experience Block
+                <div className="mb-4 md:mb-6 flex-shrink-0">
+                  <span className="text-[10px] uppercase font-mono tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 inline-block mb-2 md:mb-3 shadow-[inset_0_1px_1px_rgba(96,165,250,0.2)]">
+                    Experience Block 0{index + 1}
                   </span>
-                  <h3 className="text-3xl md:text-5xl font-medium text-white tracking-tight">{job.role}</h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                    <p className="text-blue-300/90 text-lg md:text-xl font-normal">{job.company}</p>
+                  <h3 className="text-2xl md:text-4xl lg:text-5xl font-medium text-white tracking-tight leading-tight">
+                    {job.role}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">
+                    <p className="text-blue-300 text-base md:text-xl font-normal">{job.company}</p>
                     <span className="hidden md:inline text-neutral-600">•</span>
-                    <p className="text-neutral-400 text-sm font-mono">{job.date}</p>
+                    <p className="text-neutral-400 text-xs font-mono">{job.date}</p>
                   </div>
                 </div>
-                
-                <div className="h-px w-full bg-white/5 mb-6"></div>
-
-                <ul className="space-y-3.5 text-neutral-300 text-base md:text-lg leading-relaxed">
+                <div className="h-px w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent mb-4 md:mb-6 flex-shrink-0"></div>
+                <ul className="space-y-3 text-neutral-300 text-sm md:text-base lg:text-lgb font-light">
                   {job.details.map((point, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="text-blue-400 mt-2 text-[8px] min-w-[8px] shadow-[0_0_8px_rgba(96,165,250,0.6)]">●</span>
+                      <span className="text-blue-400 mt-2 text-[5px] min-w-[5px] h-[5px] rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)] flex-shrink-0"></span>
                       <span className="hover:text-white transition-colors duration-200">{point}</span>
                     </li>
                   ))}
@@ -347,22 +430,20 @@ export default function App() {
             ))}
           </div>
 
-          {/* Right Container: Oval Tracker */}
           <div className="w-full md:w-1/4 flex flex-row md:flex-col justify-center items-center gap-4 md:gap-6 h-auto md:h-[60vh] relative z-30">
-            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1.5 bg-neutral-800 rounded-full overflow-hidden">
-              {/* Dynamic Inner Fill Line tracking progress */}
+            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-neutral-800/80 rounded-full overflow-hidden">
               <div 
-                className="w-full bg-white/40 transition-all duration-500 ease-out"
-                style={{ height: `${((activeWorkIndex) / (workData.length - 1)) * 100}%` }}
+                className="w-full bg-gradient-to-b from-blue-500 to-white transition-all duration-300 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                style={{ height: `${(activeWorkIndex / (workData.length - 1)) * 100}%` }}
               />
             </div>
             {workData.map((_, index) => (
               <div
                 key={index}
-                className={`w-4 h-4 rounded-full transition-all duration-500 ease-out z-10 border will-change-[transform,background-color] ${
+                className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ease-out z-10 border will-change-[transform,background-color] ${
                   activeWorkIndex === index 
-                    ? 'bg-white scale-125 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)]' 
-                    : 'bg-neutral-800 scale-90 opacity-80 border-transparent hover:border-neutral-600'
+                    ? 'bg-white scale-125 border-white shadow-[0_0_15px_rgba(255,255,255,0.8)]' 
+                    : 'bg-neutral-800 scale-90 opacity-60 border-transparent'
                 }`}
               ></div>
             ))}
@@ -371,10 +452,160 @@ export default function App() {
         </div>
       </section>
 
-      {/* SECTION 6: NEXT PLACEHOLDER */}
-      <section className="w-full h-screen bg-gray-900 text-white flex items-center justify-center">
-        <h2 className="text-4xl font-light tracking-widest uppercase">Projects Timeline (Next)</h2>
+      {/* ============================================== */}
+      {/* SECTION 6: PROJECTS SLIDER                     */}
+      {/* ============================================== */}
+      <section className="w-full min-h-screen bg-black text-white flex flex-col items-center justify-center py-20 px-6 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="w-full max-w-5xl relative z-10">
+          <h2 className="text-4xl md:text-6xl font-light tracking-tight text-center mb-12 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
+            Projects Journey
+          </h2>
+
+          {/* SLIDER CARD CONTAINER */}
+          <div className="relative w-full h-[400px] md:h-[450px] rounded-3xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl group">
+            
+            {/* Timeline Vertical Progress (Left side visual) */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 h-[80%] w-[2px] bg-white/10 rounded-full z-20 hidden md:block">
+              <div 
+                className="w-full bg-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.6)] rounded-full transition-all duration-500 ease-out"
+                style={{ height: `${((activeProjectIndex + 1) / projectsData.length) * 100}%` }}
+              ></div>
+            </div>
+
+            {/* SLIDING CARDS */}
+            <div className="w-full h-full relative flex items-center justify-center px-6 md:px-16">
+              {projectsData.map((project, index) => {
+                // Calculate offset relative to active index
+                const offset = index - activeProjectIndex;
+                return (
+                  <div
+                    key={index}
+                    className={`absolute p-6 md:p-10 w-[90%] md:w-full transition-all duration-500 ease-in-out ${
+                      offset === 0 
+                        ? 'opacity-100 translate-x-0 scale-100 z-10' 
+                        : offset < 0 
+                          ? 'opacity-0 -translate-x-12 scale-95 z-0' // Slide out left
+                          : 'opacity-0 translate-x-12 scale-95 z-0'  // Slide in from right
+                    }`}
+                  >
+                    <div className="mb-4">
+                      <span className="text-[10px] uppercase font-mono tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 inline-block mb-3 shadow-[inset_0_1px_1px_rgba(96,165,250,0.2)]">
+                        Project 0{index + 1}
+                      </span>
+                      <h3 className="text-2xl md:text-4xl font-medium text-white tracking-tight leading-tight">
+                        {project.title}
+                      </h3>
+                      <p className="text-blue-300 text-base md:text-xl mt-1 font-normal">{project.company}</p>
+                    </div>
+                    
+                    <div className="h-px w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent my-4"></div>
+                    <p className="text-gray-300 text-base md:text-lg leading-relaxed font-light">
+                      {project.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* NAVIGATION ARROWS */}
+            <button 
+              onClick={prevProject}
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 flex items-center justify-center z-30 text-white/80 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <button 
+              onClick={nextProject}
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 flex items-center justify-center z-30 text-white/80 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+
+          {/* DOTS NAVIGATION */}
+          <div className="flex justify-center gap-3 mt-6">
+            {projectsData.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveProjectIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  activeProjectIndex === index 
+                    ? 'w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]' 
+                    : 'w-2 bg-white/30 hover:bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </section>
+
+      {/* ============================================== */}
+      {/* SECTION 7: HOBBIES SLIDE CARD                  */}
+      {/* ============================================== */}
+      <section className="w-full min-h-screen bg-black text-white flex items-center justify-center py-20 px-6 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <div className="w-full max-w-4xl relative z-10">
+          <h2 className="text-4xl md:text-6xl font-light tracking-tight text-center mb-16 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
+            Interests & Hobbies
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {hobbiesData.map((hobby, index) => (
+              <div 
+                key={index}
+                className="bg-white/5 hover:bg-white/10 transition-all duration-500 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl group hover:scale-[1.02]"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm font-bold">
+                    {index === 0 ? '💻' : '♟'}
+                  </div>
+                  <h3 className="text-2xl font-medium text-white tracking-tight">{hobby.title}</h3>
+                </div>
+                <div className="h-px w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent mb-4"></div>
+                <p className="text-gray-300 text-lg leading-relaxed font-light">
+                  {hobby.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================== */}
+      {/* SECTION 8: FOOTER VIDEO                        */}
+      {/* ============================================== */}
+      <section className="w-full h-screen bg-black relative overflow-hidden flex items-center justify-center">
+        <video 
+          src="/assets/footer-video.mp4" 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="w-full h-full object-cover absolute inset-0 z-0"
+        />
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
+        <div className="relative z-20 text-center px-6">
+          <h2 className="text-3xl md:text-5xl font-light tracking-widest text-white">
+            Let's Connect
+          </h2>
+          <p className="text-gray-400 mt-4 text-sm md:text-base tracking-wide">
+            ewon.william@example.com
+          </p>
+        </div>
+      </section>
+
+      {/* Inline styles helper to cleanly hide scrollbar indicators in webkit views */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .style-scrollbar::-webkit-scrollbar { display: none; }
+        .style-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
 
     </div>
   );
