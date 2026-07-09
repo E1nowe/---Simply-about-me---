@@ -262,7 +262,7 @@ export default function App() {
     return () => ctx.revert();
   }, [workData.length]);
 
-  // --- 4. GSAP APPLE TRANSITION FOR EDUCATION ---
+  
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const content = document.getElementById('edu-content');
@@ -356,9 +356,9 @@ export default function App() {
               <span className="ml-2 text-xs text-black/30 dark:text-gray-500">Generating professional summary...</span>
             </div>
             <div className="space-y-4 text-lg md:text-xl font-light leading-relaxed text-black/70 dark:text-gray-200">
-              <p><span className="font-bold text-black dark:text-white">Computer Science undergraduate</span> with a strong foundation in data science, AI, and software development.</p>
+              <p><span className="font-bold text-black dark:text-white">Computer Science undergraduate</span> with a strong foundation in Data science, AI, and software development.</p>
               <p>Experienced in building solutions that align technical innovation with business strategy. Proficient in <span className="font-bold text-black dark:text-white">Java, Python, R, HTML, JavaScript, React, and SQL</span>.</p>
-              <p>Designed an <span className="font-bold text-black dark:text-white">AI-powered predictive maintenance platform</span> (Python, TensorFlow, IoT) achieving 92% fault-detection accuracy.</p>
+              <p>Designed an <span className="font-bold text-black dark:text-white">AI-powered predictive maintenance platform</span> </p>
               <p className="border-t border-black/10 dark:border-white/10 pt-4 mt-4 text-sm text-black/40 dark:text-gray-400">Currently seeking opportunities to leverage AI, predictive analytics, and software engineering in real-world innovation.</p>
             </div>
           </div>
@@ -586,7 +586,7 @@ export default function App() {
               >
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 text-sm font-bold">
-                    {index === 0 ? '💻' : '♟'}
+                    
                   </div>
                   <h3 className="text-2xl font-medium text-black dark:text-white tracking-tight">{hobby.title}</h3>
                 </div>
