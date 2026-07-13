@@ -1,1 +1,1 @@
-Its simply about me, for people who is intreseted to know more.
+It's simply about me, for people who is intreseted to know more.
